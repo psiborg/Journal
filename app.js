@@ -8,7 +8,7 @@
 const APP_VERSION   = '1.0.0';
 const CACHE_VERSION = 'journal-v1'; // must match CACHE in sw.js
 
-// ─── Minimal Markdown Parser ────────────────────────────────────────────────
+// --- Minimal Markdown Parser ------------------------------------------------
 
 const MD = (() => {
   function escapeHtml(s) {
@@ -156,7 +156,7 @@ const MD = (() => {
 })();
 
 
-// ─── State ──────────────────────────────────────────────────────────────────
+// --- State ------------------------------------------------------------------
 
 const state = {
   currentDate:  null,   // 'YYYY-MM-DD'
@@ -173,7 +173,7 @@ const state = {
 const STORAGE_KEY  = 'journal_notes_v1';
 const SETTINGS_KEY = 'journal_settings';
 
-// ─── Settings Store ───────────────────────────────────────────────────────────
+// --- Settings Store -----------------------------------------------------------
 // Single JSON object under SETTINGS_KEY:
 // { vscodeTheme, font, fontSize }
 
@@ -210,7 +210,7 @@ const Settings = (() => {
 })();
 
 
-// ─── DOM Refs ────────────────────────────────────────────────────────────────
+// --- DOM Refs ----------------------------------------------------------------
 
 const $ = id => document.getElementById(id);
 
@@ -245,7 +245,7 @@ const els = {
 };
 
 
-// ─── Storage ─────────────────────────────────────────────────────────────────
+// --- Storage -----------------------------------------------------------------
 
 function loadNotes() {
   try {
@@ -267,7 +267,7 @@ function uid() {
 }
 
 
-// ─── Date Helpers ─────────────────────────────────────────────────────────────
+// --- Date Helpers -------------------------------------------------------------
 
 function todayKey() {
   const d = new Date();
@@ -295,7 +295,7 @@ const MONTHS = ['January','February','March','April','May','June',
                 'July','August','September','October','November','December'];
 
 
-// ─── Note Accessors ───────────────────────────────────────────────────────────
+// --- Note Accessors -----------------------------------------------------------
 
 function notesForDay(dateKey) {
   return state.notes[dateKey] || [];
@@ -314,7 +314,7 @@ function noteIndex(dateKey, id) {
 }
 
 
-// ─── Calendar ────────────────────────────────────────────────────────────────
+// --- Calendar ----------------------------------------------------------------
 
 function renderCalendar() {
   const { calYear: y, calMonth: m } = state;
@@ -375,7 +375,7 @@ function calDayHtml(d, key, extra, today) {
 }
 
 
-// ─── Notes List (sidebar) ─────────────────────────────────────────────────────
+// --- Notes List (sidebar) -----------------------------------------------------
 
 function renderNotesList() {
   // Collect all individual notes sorted newest-first
@@ -446,7 +446,7 @@ function extractPreview(content) {
 }
 
 
-// ─── Note Tabs Bar ────────────────────────────────────────────────────────────
+// --- Note Tabs Bar ------------------------------------------------------------
 
 function renderNoteTabs() {
   const dateKey = state.currentDate;
@@ -490,7 +490,7 @@ function renderNoteTabs() {
 }
 
 
-// ─── Open Day / Note ──────────────────────────────────────────────────────────
+// --- Open Day / Note ----------------------------------------------------------
 
 /** Open a day — picks first existing note or creates one */
 function openDay(dateKey) {
@@ -553,7 +553,7 @@ function addNoteToDay(dateKey) {
 }
 
 
-// ─── Editor ──────────────────────────────────────────────────────────────────
+// --- Editor ------------------------------------------------------------------
 
 els.mdEditor.addEventListener('input', () => {
   renderPreview();
@@ -581,7 +581,7 @@ els.mdEditor.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); applyFormat('link'); }
 });
 
-// ─── Image Store (IndexedDB) ──────────────────────────────────────────────────
+// --- Image Store (IndexedDB) --------------------------------------------------
 
 const ImageStore = (() => {
   const DB_NAME    = 'journal_images';
@@ -698,7 +698,7 @@ function updateStatus() {
 }
 
 
-// ─── Split View ───────────────────────────────────────────────────────────────
+// --- Split View ---------------------------------------------------------------
 
 function initSplitView() {
   // Default: editor 50%, preview 50%
@@ -774,7 +774,7 @@ els.splitHandle.addEventListener('keydown', e => {
 });
 
 
-// ─── Delete Note ─────────────────────────────────────────────────────────────
+// --- Delete Note -------------------------------------------------------------
 
 async function deleteNoteById(dateKey, noteId) {
   const note  = getNoteById(dateKey, noteId);
@@ -847,7 +847,7 @@ els.deleteNoteBtn.addEventListener('click', () => {
 });
 
 
-// ─── Confirm Dialog ───────────────────────────────────────────────────────────
+// --- Confirm Dialog -----------------------------------------------------------
 
 function showConfirm(title, msg, onConfirm, { confirmLabel = 'Delete', confirmClass = 'btn-danger' } = {}) {
   const overlay = document.createElement('div');
@@ -871,7 +871,7 @@ function showConfirm(title, msg, onConfirm, { confirmLabel = 'Delete', confirmCl
 }
 
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
+// --- Toast --------------------------------------------------------------------
 
 let _toast;
 function showToast(msg, duration = 2500) {
@@ -903,7 +903,7 @@ function showToastWithAction(msg, actionLabel, onAction) {
 }
 
 
-// ─── Sidebar (mobile) ─────────────────────────────────────────────────────────
+// --- Sidebar (mobile) ---------------------------------------------------------
 
 els.sidebarToggle.addEventListener('click', toggleSidebar);
 els.sidebarOverlay.addEventListener('click', closeSidebar);
@@ -924,7 +924,7 @@ function closeSidebar() {
 }
 
 
-// ─── Calendar Navigation ──────────────────────────────────────────────────────
+// --- Calendar Navigation ------------------------------------------------------
 
 els.prevMonth.addEventListener('click', () => {
   state.calMonth--;
@@ -949,7 +949,7 @@ els.calDays.addEventListener('keydown', e => {
 });
 
 
-// ─── Global Keyboard Shortcuts ────────────────────────────────────────────────
+// --- Global Keyboard Shortcuts ------------------------------------------------
 
 document.addEventListener('keydown', e => {
   // Ignore when typing in editor
@@ -966,7 +966,7 @@ document.addEventListener('keydown', e => {
 });
 
 
-// ─── Buttons ─────────────────────────────────────────────────────────────────
+// --- Buttons -----------------------------------------------------------------
 
 els.newNoteBtn.addEventListener('click', () => {
   // If a day is open, add a note to that day; otherwise add to today
@@ -981,7 +981,7 @@ els.addNoteTab.addEventListener('click', () => {
 });
 
 
-// ─── PWA Service Worker ───────────────────────────────────────────────────────
+// --- PWA Service Worker -------------------------------------------------------
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -996,7 +996,7 @@ if ('serviceWorker' in navigator) {
 }
 
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// --- Init ---------------------------------------------------------------------
 
 function init() {
   loadNotes();
@@ -1019,9 +1019,9 @@ function init() {
 init();
 
 
-// ─── Markdown Toolbar ─────────────────────────────────────────────────────────
+// --- Markdown Toolbar ---------------------------------------------------------
 
-// ── Core formatting engine ────────────────────────────────────────────────────
+// -- Core formatting engine ----------------------------------------------------
 function applyFormat(action) {
   const ta = els.mdEditor;
   const start = ta.selectionStart;
@@ -1134,7 +1134,7 @@ function applyFormat(action) {
   ta.focus();
 }
 
-// ── Wire up toolbar buttons ────────────────────────────────────────────────────
+// -- Wire up toolbar buttons ----------------------------------------------------
 
 // Image button — opens file picker instead of calling applyFormat
 const imageFileInput = document.getElementById('image-file-input');
@@ -1197,7 +1197,7 @@ document.querySelectorAll('.dropdown-item[data-action]').forEach(btn => {
   });
 });
 
-// ── Heading dropdown ──────────────────────────────────────────────────────────
+// -- Heading dropdown ----------------------------------------------------------
 const headingTrigger = document.getElementById('heading-trigger');
 const headingMenu    = document.getElementById('heading-menu');
 
@@ -1225,7 +1225,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeHeadingDropdown();
 });
 
-// ── Active state: reflect cursor context ──────────────────────────────────────
+// -- Active state: reflect cursor context --------------------------------------
 els.mdEditor.addEventListener('keyup', updateToolbarState);
 els.mdEditor.addEventListener('click', updateToolbarState);
 els.mdEditor.addEventListener('select', updateToolbarState);
@@ -1268,7 +1268,7 @@ function updateToolbarState() {
 }
 
 
-// ─── Search ───────────────────────────────────────────────────────────────────
+// --- Search -------------------------------------------------------------------
 
 const searchState = {
   open: false,
@@ -1288,7 +1288,7 @@ const searchClose    = document.getElementById('search-close');
 const searchBtn      = document.getElementById('search-btn');
 const sortSelect     = document.getElementById('search-sort-select');
 
-// ── Open / close ──────────────────────────────────────────────────────────────
+// -- Open / close --------------------------------------------------------------
 
 function openSearch() {
   searchState.open = true;
@@ -1311,7 +1311,7 @@ searchOverlay.addEventListener('mousedown', e => {
   if (e.target === searchOverlay) closeSearch();
 });
 
-// ── Filter chips ──────────────────────────────────────────────────────────────
+// -- Filter chips --------------------------------------------------------------
 
 document.querySelectorAll('.filter-chip').forEach(chip => {
   chip.addEventListener('click', () => {
@@ -1327,7 +1327,7 @@ sortSelect.addEventListener('change', () => {
   runSearch();
 });
 
-// ── Input handler ─────────────────────────────────────────────────────────────
+// -- Input handler -------------------------------------------------------------
 
 searchInput.addEventListener('input', () => {
   searchState.query = searchInput.value;
@@ -1335,7 +1335,7 @@ searchInput.addEventListener('input', () => {
   runSearch();
 });
 
-// ── Keyboard navigation ───────────────────────────────────────────────────────
+// -- Keyboard navigation -------------------------------------------------------
 
 searchInput.addEventListener('keydown', e => {
   const count = searchState.results.length;
@@ -1365,7 +1365,7 @@ function updateFocus() {
   });
 }
 
-// ── Search engine ─────────────────────────────────────────────────────────────
+// -- Search engine -------------------------------------------------------------
 
 function runSearch() {
   const q = searchState.query.trim().toLowerCase();
@@ -1430,7 +1430,7 @@ function runSearch() {
   renderSearchResults();
 }
 
-// ── Highlighting ──────────────────────────────────────────────────────────────
+// -- Highlighting --------------------------------------------------------------
 
 function highlight(text, query) {
   if (!query) return escHtml(text);
@@ -1440,7 +1440,7 @@ function highlight(text, query) {
   return escHtml(text).replace(re, '<mark class="search-hl">$1</mark>');
 }
 
-// ── Render results ────────────────────────────────────────────────────────────
+// -- Render results ------------------------------------------------------------
 
 function renderSearchResults() {
   const q = searchState.query.trim();
@@ -1522,7 +1522,7 @@ function selectResult(dateKey, noteId) {
   renderCalendar();
 }
 
-// ── Global shortcut: Ctrl/Cmd+F or / ─────────────────────────────────────────
+// -- Global shortcut: Ctrl/Cmd+F or / -----------------------------------------
 
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
@@ -1540,7 +1540,7 @@ document.addEventListener('keydown', e => {
 });
 
 
-// ─── VSCode Theme System ──────────────────────────────────────────────────────
+// --- VSCode Theme System ------------------------------------------------------
 
 const VSCODE_THEME_KEY = 'vscodeTheme'; // key inside journal_settings
 
@@ -1601,7 +1601,7 @@ const DEFAULT_THEME = { id: 'default', name: 'Journal Default', variant: 'both' 
 
 let activeVscodeTheme = null; // null = Journal default
 
-// ── Apply / remove VSCode theme ───────────────────────────────────────────────
+// -- Apply / remove VSCode theme -----------------------------------------------
 
 function applyVscodeTheme(themeId) {
   // Remove all existing vscode theme attributes
@@ -1631,7 +1631,7 @@ function loadVscodeTheme() {
   if (saved) applyVscodeTheme(saved);
 }
 
-// ── Build theme picker UI ─────────────────────────────────────────────────────
+// -- Build theme picker UI -----------------------------------------------------
 
 function buildThemePicker() {
   const darkGrid  = document.getElementById('dark-theme-grid');
@@ -1686,7 +1686,7 @@ function updateThemePickerUI() {
   }
 }
 
-// ── Open / close picker ───────────────────────────────────────────────────────
+// -- Open / close picker -------------------------------------------------------
 
 const themePickerPanel = document.getElementById('theme-picker-panel');
 const themePickerClose = document.getElementById('theme-picker-close');
@@ -1718,12 +1718,12 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && themePickerPanel.style.display !== 'none') closeThemePicker();
 });
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// -- Init ----------------------------------------------------------------------
 buildThemePicker();
 loadVscodeTheme();
 
 
-// ─── Sidebar Menu ─────────────────────────────────────────────────────────────
+// --- Sidebar Menu -------------------------------------------------------------
 
 const sidebarMenuBtn  = document.getElementById('sidebar-menu-btn');
 const sidebarMenu     = document.getElementById('sidebar-menu');
@@ -1750,7 +1750,7 @@ document.addEventListener('keydown', e => {
 });
 
 
-// ─── Export ───────────────────────────────────────────────────────────────────
+// --- Export -------------------------------------------------------------------
 
 document.getElementById('menu-export').addEventListener('click', async () => {
   closeSidebarMenu();
@@ -1786,7 +1786,7 @@ document.getElementById('menu-export').addEventListener('click', async () => {
 });
 
 
-// ─── Import ───────────────────────────────────────────────────────────────────
+// --- Import -------------------------------------------------------------------
 
 const importFileInput = document.getElementById('import-file-input');
 
@@ -1863,12 +1863,12 @@ importFileInput.addEventListener('change', () => {
 });
 
 
-// ─── About Modal ──────────────────────────────────────────────────────────────
+// --- About Modal --------------------------------------------------------------
 
 const aboutOverlay = document.getElementById('about-overlay');
 const aboutClose   = document.getElementById('about-close');
 
-// ─── Clear All Notes ──────────────────────────────────────────────────────────
+// --- Clear All Notes ----------------------------------------------------------
 
 document.getElementById('menu-clear').addEventListener('click', () => {
   closeSidebarMenu();
@@ -1919,7 +1919,7 @@ document.getElementById('menu-clear').addEventListener('click', () => {
 });
 
 
-// ─── About Modal ──────────────────────────────────────────────────────────────
+// --- About Modal --------------------------------------------------------------
 
 function openAbout() {
   // Version info
@@ -1961,7 +1961,7 @@ aboutOverlay.addEventListener('click', e => { if (e.target === aboutOverlay) clo
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && aboutOverlay.style.display !== 'none') closeAbout(); });
 
 
-// ─── Font Settings ────────────────────────────────────────────────────────────
+// --- Font Settings ------------------------------------------------------------
 
 const FONT_KEY      = 'font';      // key inside journal_settings
 const FONT_SIZE_KEY = 'fontSize';  // key inside journal_settings
@@ -2012,7 +2012,7 @@ function loadFontSettings() {
   applyFontSettings();
 }
 
-// ── Populate size <select> ────────────────────────────────────────────────────
+// -- Populate size <select> ----------------------------------------------------
 
 function buildFontSizeSelect() {
   const sel = document.getElementById('font-size-select');
@@ -2032,7 +2032,7 @@ function buildFontSizeSelect() {
   });
 }
 
-// ── Build the font face grid ──────────────────────────────────────────────────
+// -- Build the font face grid --------------------------------------------------
 
 function buildFontFaceGrid() {
   const grid = document.getElementById('font-face-grid');
@@ -2053,7 +2053,7 @@ function buildFontFaceGrid() {
   });
 }
 
-// ── Update active states and live preview ─────────────────────────────────────
+// -- Update active states and live preview -------------------------------------
 
 function updateFontPreview() {
   const cs  = getComputedStyle(document.documentElement);
@@ -2079,7 +2079,7 @@ function updateFontUI() {
   updateFontPreview();
 }
 
-// ── Open / close ─────────────────────────────────────────────────────────────
+// -- Open / close -------------------------------------------------------------
 
 const fontSettingsOverlay = document.getElementById('font-settings-overlay');
 const fontSettingsClose   = document.getElementById('font-settings-close');
@@ -2106,5 +2106,5 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && fontSettingsOverlay.style.display !== 'none') closeFontSettings();
 });
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// -- Init ----------------------------------------------------------------------
 loadFontSettings();

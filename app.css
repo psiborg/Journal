@@ -1204,7 +1204,7 @@ mark.search-hl {
    VSCode Theme Support
    ============================================================ */
 
-/* ── Theme variable overrides ── */
+/* -- Theme variable overrides -- */
 
 /* One Dark Pro */
 [data-vscode-theme="one-dark-pro"] {
@@ -1414,7 +1414,7 @@ mark.search-hl {
   --cal-selected-text: #fdf6e3;
 }
 
-/* ── Theme Picker UI ── */
+/* -- Theme Picker UI -- */
 
 .theme-picker-panel {
   position: fixed;
@@ -1958,7 +1958,7 @@ mark.search-hl {
    Font Settings
    ============================================================ */
 
-/* ── Font face overrides (applied to <html>) ── */
+/* -- Font face overrides (applied to <html>) -- */
 
 [data-font="serif"] {
   --editor-font:       'Lora', Georgia, serif;
@@ -1981,10 +1981,10 @@ mark.search-hl {
   --preview-font:      'Merriweather', Georgia, serif;
 }
 
-/* ── Font size — applied directly via CSS variable on <html> ── */
+/* -- Font size — applied directly via CSS variable on <html> -- */
 /* (set inline by JS: html.style.setProperty('--editor-font-size', ...) ) */
 
-/* ── Font Settings Modal ── */
+/* -- Font Settings Modal -- */
 
 .font-settings-overlay {
   position: fixed;
