@@ -5,6 +5,9 @@
 
 'use strict';
 
+const APP_VERSION   = '1.0.0';
+const CACHE_VERSION = 'journal-v1'; // must match CACHE in sw.js
+
 // ─── Minimal Markdown Parser ────────────────────────────────────────────────
 
 const MD = (() => {
@@ -1919,6 +1922,12 @@ document.getElementById('menu-clear').addEventListener('click', () => {
 // ─── About Modal ──────────────────────────────────────────────────────────────
 
 function openAbout() {
+  // Version info
+  const verEl   = document.getElementById('about-version');
+  const cacheEl = document.getElementById('about-cache');
+  if (verEl)   verEl.textContent   = `v${APP_VERSION}`;
+  if (cacheEl) cacheEl.textContent = `cache ${CACHE_VERSION}`;
+
   // Populate live stats
   const days  = Object.keys(state.notes).length;
   const total = Object.values(state.notes).reduce((s, a) => s + a.length, 0);

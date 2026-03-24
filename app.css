@@ -2140,3 +2140,54 @@ mark.search-hl {
   line-height: 1.7;
   background: var(--bg-card);
 }
+
+/* ---------- About Modal — version meta & GitHub button ---------- */
+
+.about-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+  margin-bottom: 2px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+  letter-spacing: .3px;
+}
+
+.about-meta-sep { opacity: .4; }
+
+.about-github-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.about-github-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 99px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  letter-spacing: .3px;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.about-github-btn:hover {
+  background: var(--text-primary);
+  color: var(--bg-page);
+  border-color: var(--text-primary);
+}
+
+.about-github-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
