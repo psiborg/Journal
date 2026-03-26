@@ -6,7 +6,7 @@
 'use strict';
 
 const APP_VERSION   = '1.0.0';
-const CACHE_VERSION = 'journal-v1'; // must match CACHE in sw.js
+const CACHE_VERSION = 'journal-v1.1'; // must match CACHE in sw.js
 
 // --- Minimal Markdown Parser ------------------------------------------------
 
@@ -16,25 +16,113 @@ const MD = (() => {
   }
 
   function parseInline(s) {
+    // Protect named links and images first — replace with placeholders so the
+    // auto-link pass cannot match URLs that are already inside an href/src.
+    const saved = [];
+    function protect(html) {
+      const idx = saved.length;
+      saved.push(html);
+      return `\x00${idx}\x00`;
+    }
+
+    let out = s;
+
+    // Images  ![alt](url)
+    out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) =>
+      protect(`<img src="${url}" alt="${escapeHtml(alt)}" />`)
+    );
+
+    // Named links  [text](url)
+    out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, url) =>
+      protect(`<a href="${url}" target="_blank" rel="noopener">${parseInlineBasic(text)}</a>`)
+    );
+
+    // Auto-links — only match URLs NOT already inside a saved placeholder
+    out = out.replace(/(?<!\x00\d*)\b(https?:\/\/[^\s<>"'\x00]+)/g, (_, url) =>
+      protect(`<a href="${url}" target="_blank" rel="noopener">${url}</a>`)
+    );
+
+    // Inline formatting (operates on the remaining plain text between placeholders)
+    out = parseInlineBasic(out);
+
+    // Restore saved HTML
+    out = out.replace(/\x00(\d+)\x00/g, (_, idx) => saved[parseInt(idx, 10)]);
+
+    return out;
+  }
+
+  // Basic inline formatting only — no link handling
+  function parseInlineBasic(s) {
     return s
-      // Bold+italic
       .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
-      // Bold
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/__(.*?)__/g, '<strong>$1</strong>')
-      // Italic
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
       .replace(/_((?!_).*?)_/g, '<em>$1</em>')
-      // Strikethrough
       .replace(/~~(.*?)~~/g, '<del>$1</del>')
-      // Inline code
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // Images
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
-      // Links
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-      // Auto-links
-      .replace(/(?<!\])\b(https?:\/\/[^\s<>"']+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
+  }
+
+  // -- Nested list parser ------------------------------------------------------
+  // Collects a block of list lines (including indented continuations) and
+  // builds nested <ul>/<ol> structures recursively.
+
+  function parseListBlock(lines, startIndex, baseIndent, ordered) {
+    // Determine bullet pattern for this level
+    const bulletRe  = /^(\s*)([-*+])\s+(.*)/;
+    const orderedRe = /^(\s*)(\d+)\.\s+(.*)/;
+    const re = ordered ? orderedRe : bulletRe;
+
+    let html  = '';
+    let i     = startIndex;
+    const tag = ordered ? 'ol' : 'ul';
+
+    while (i < lines.length) {
+      const line = lines[i];
+      const m    = line.match(re);
+
+      if (!m) break; // not a matching list item at all
+
+      const indent = m[1].length;
+
+      if (indent < baseIndent) break;          // dedented past our level → done
+      if (indent > baseIndent) { i++; continue; } // deeper indent handled by recursion below
+
+      // Same-level item
+      const rawText = m[3];
+
+      // Task-list checkbox
+      const taskM = rawText.match(/^\[([ xX])\]\s+(.*)/);
+      let itemContent;
+      if (taskM) {
+        const checked = taskM[1].toLowerCase() === 'x' ? ' checked' : '';
+        itemContent = `<input type="checkbox"${checked} disabled /> ${parseInline(taskM[2])}`;
+      } else {
+        itemContent = parseInline(rawText);
+      }
+
+      i++;
+
+      // Look ahead: are the next lines more-indented? If so, they are children.
+      let childHtml = '';
+      while (i < lines.length) {
+        const nextLine    = lines[i];
+        const ulM         = nextLine.match(/^(\s*)([-*+])\s+/);
+        const olM         = nextLine.match(/^(\s*)(\d+)\.\s+/);
+        const childMatch  = ulM || olM;
+        if (!childMatch) break;
+        const childIndent = childMatch[1].length;
+        if (childIndent <= baseIndent) break; // same or shallower — stop child
+        const childOrdered = !!olM;
+        const [subHtml, newI] = parseListBlock(lines, i, childIndent, childOrdered);
+        childHtml += subHtml;
+        i = newI;
+      }
+
+      html += `<li${taskM ? ' class="task-item"' : ''}>${itemContent}${childHtml}</li>`;
+    }
+
+    return [`<${tag}>${html}</${tag}>`, i];
   }
 
   function parse(md) {
@@ -86,41 +174,30 @@ const MD = (() => {
         continue;
       }
 
-      // Unordered list
-      if (/^(\s*)([-*+])\s/.test(line)) {
-        let items = '';
-        while (i < lines.length && /^\s*([-*+])\s/.test(lines[i])) {
-          const txt = lines[i].replace(/^\s*([-*+])\s/, '');
-          // Task list
-          const task = txt.match(/^\[([ xX])\]\s+(.*)/);
-          if (task) {
-            const checked = task[1].toLowerCase() === 'x' ? 'checked' : '';
-            items += `<li class="task-item"><input type="checkbox" ${checked} disabled /> ${parseInline(task[2])}</li>`;
-          } else {
-            items += `<li>${parseInline(txt)}</li>`;
-          }
-          i++;
-        }
-        html += `<ul>${items}</ul>`;
+      // Unordered list (may be indented — find top-level indent)
+      const ulM = line.match(/^(\s*)([-*+])\s/);
+      if (ulM) {
+        const baseIndent = ulM[1].length;
+        const [listHtml, newI] = parseListBlock(lines, i, baseIndent, false);
+        html += listHtml;
+        i = newI;
         continue;
       }
 
       // Ordered list
-      if (/^\d+\.\s/.test(line)) {
-        let items = '';
-        while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
-          const txt = lines[i].replace(/^\d+\.\s/, '');
-          items += `<li>${parseInline(txt)}</li>`;
-          i++;
-        }
-        html += `<ol>${items}</ol>`;
+      const olM = line.match(/^(\s*)\d+\.\s/);
+      if (olM) {
+        const baseIndent = olM[1].length;
+        const [listHtml, newI] = parseListBlock(lines, i, baseIndent, true);
+        html += listHtml;
+        i = newI;
         continue;
       }
 
       // Table
       if (/\|/.test(line) && i + 1 < lines.length && /^[\|:\- ]+$/.test(lines[i+1])) {
         const headers = line.split('|').map(h => h.trim()).filter(h => h);
-        i += 2; // skip separator
+        i += 2;
         let rows = '';
         while (i < lines.length && /\|/.test(lines[i])) {
           const cells = lines[i].split('|').map(c => c.trim()).filter(c => c);
@@ -132,13 +209,13 @@ const MD = (() => {
         continue;
       }
 
-      // Empty line → paragraph break
+      // Empty line
       if (line.trim() === '') {
         i++;
         continue;
       }
 
-      // Paragraph — collect consecutive non-special lines
+      // Paragraph
       let para = '';
       while (i < lines.length &&
              lines[i].trim() !== '' &&
